@@ -6,7 +6,7 @@ Test workshop to get work is evacuation planning
    - generate multiple plans
 - update amount evacuees and vehicle type is used
    - update single plan
-   - update multi plans
+   - update multiple plans
 - delete plan used
    - delete single plan
    - delete multiple plans
