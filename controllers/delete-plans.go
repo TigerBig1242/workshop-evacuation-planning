@@ -49,6 +49,5 @@ func DeletePlans(c *fiber.Ctx) error {
 
 	return c.Status(200).JSON(fiber.Map{
 		"message": "Deleted all current evacuation plans success",
-		// "delete plans": plans,
 	})
 }

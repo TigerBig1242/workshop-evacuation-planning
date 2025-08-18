@@ -77,6 +77,7 @@ func GetAllEvacuationPlans() ([]map[string]interface{}, error) {
 
 func UpdatePlan(id uint, evacuees int) (*models.Evacuation_plan, error) {
 	var existPlan models.Evacuation_plan
+
 	if err := config.DB.First(&existPlan, id).Error; err != nil {
 		return nil, fmt.Errorf("error finding evacuation plan: %v", err)
 	}
@@ -93,15 +94,6 @@ func UpdatePlan(id uint, evacuees int) (*models.Evacuation_plan, error) {
 	return &existPlan, nil
 }
 
-// func UpdatePlans() (*models.Evacuation_plan, error) {
-// 	var getPlans models.Evacuation_plan
-// 	err := config.DB.First(&getPlans)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("error finding evacuation plans %v", err)
-// 	}
-
-//		return &getPlans, nil
-//	}
 func UpdatePlans(updates []map[string]interface{}) ([]map[string]interface{}, error) {
 	transaction := config.DB.Begin()
 	var updatePlans []map[string]interface{}
@@ -129,15 +121,16 @@ func UpdatePlans(updates []map[string]interface{}) ([]map[string]interface{}, er
 		}
 
 		var updatePlan map[string]interface{}
+		// var updatePlan map[string]int
 		if err := transaction.Raw(`
-			SELECT 
-				evacuation_plans.id, 
-				evacuation_plans.zone_id, 
+			SELECT
+				evacuation_plans.id,
+				evacuation_plans.zone_id,
 				evacuation_plans.vehicle_id,
-				evacuation_plans.people_evacuated, 
+				evacuation_plans.people_evacuated,
 				evacuation_plans.estimated_time_arrive,
-				vehicles.vehicle_type, 
-				vehicles.capacity 
+				vehicles.vehicle_type,
+				vehicles.capacity
 			FROM evacuation_plans
 			JOIN vehicles ON evacuation_plans.vehicle_id = vehicles.id
 			WHERE evacuation_plans.id = ?`, uint(planID)).Scan(&updatePlan).Error; err != nil {
@@ -149,6 +142,26 @@ func UpdatePlans(updates []map[string]interface{}) ([]map[string]interface{}, er
 
 	if err := transaction.Commit().Error; err != nil {
 		return nil, fmt.Errorf("failed to commit update: %v", err)
+	}
+
+	return updatePlans, nil
+}
+
+// ------------------------------------------------------------------------------------------------
+func UpdateMultiPlans(updatePlans models.Evacuation_plan) (models.Evacuation_plan, error) {
+	query := config.DB.Find(updatePlans)
+	if query != nil {
+		return models.Evacuation_plan{}, query.Error
+	}
+
+	update := config.DB.Model(updatePlans).Update("people_evacuated", updatePlans.People_evacuated)
+	if update != nil {
+		return models.Evacuation_plan{}, update.Error
+	}
+
+	getUpdatePlans := config.DB.Preload("Vehicle").Find(updatePlans)
+	if getUpdatePlans != nil {
+		return models.Evacuation_plan{}, getUpdatePlans.Error
 	}
 
 	return updatePlans, nil

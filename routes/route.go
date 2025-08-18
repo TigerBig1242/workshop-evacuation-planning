@@ -57,6 +57,8 @@ func SetRoutes() *fiber.App {
 	// app.Delete("/delete-evacuation-plan/:id", controllers.DeletePlan) // Delete single plan
 	app.Delete("/delete-evacuation-plans", controllers.DeletePlans) // Delete all current plans
 
+	app.Get("/update-evacuation-request-plans/:id", controllers.UpdateMultiPlans)
+
 	app.Get("/cause-error", func(c *fiber.Ctx) error {
 		return fmt.Errorf("intentional error for testing")
 	})

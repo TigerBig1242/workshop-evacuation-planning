@@ -25,9 +25,7 @@ func DeleteEvacuationPlans() error {
 		transaction.Rollback()
 		return fmt.Errorf("error counting records: %v", err)
 	}
-	// if err.Error != nil {
-	// 	return fmt.Errorf("error counting records: %v", err)
-	// }
+	fmt.Printf("Total evacuation plans: %d\n", count)
 
 	if count == 0 {
 		transaction.Rollback()

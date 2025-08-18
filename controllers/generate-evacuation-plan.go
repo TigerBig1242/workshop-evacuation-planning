@@ -57,7 +57,7 @@ func GenerateEvacuationPlans(c *fiber.Ctx) error {
 	// Loop through all zones from most urgent(5) to least urgent(1)
 	for urgencyLevel := 5; urgencyLevel >= 1; urgencyLevel-- {
 
-		// Filter zones by urgency level and sort by number of people most to least
+		// Filter zones by urgency level to sort by number of people most to least
 		urgentZones := FilterZoneUrgency(getAllZones, urgencyLevel)
 		sort.Slice(urgentZones, func(i, j int) bool {
 			return urgentZones[i].Number_of_people > urgentZones[j].Number_of_people
@@ -138,28 +138,27 @@ func GenerateEvacuationPlans(c *fiber.Ctx) error {
 			"zone id":               plans.Zone_id,
 			"vehicle id":            plans.Vehicle_id,
 			"people_evacuated":      plans.People_evacuated,
+			"urgency_level":         plans.Zone.Urgency_level,
 			"vehicle capacity":      plans.Vehicle.Capacity,
 			"vehicle_type":          plans.Vehicle.Vehicle_type,
 			"Estimated time arrive": timeInfo,
 		})
 	}
 
-	vehiclesDetails := make([]fiber.Map, 0)
-	for _, vehicle := range vehicles {
-		if usedVehicles[uint(vehicle.ID)] {
-			vehiclesDetails = append(vehiclesDetails, fiber.Map{
-				"id":       vehicle.ID,
-				"type":     vehicle.Vehicle_type,
-				"capacity": vehicle.Capacity,
-			})
-		}
-	}
+	// vehiclesDetails := make([]fiber.Map, 0)
+	// for _, vehicle := range vehicles {
+	// 	if usedVehicles[uint(vehicle.ID)] {
+	// 		vehiclesDetails = append(vehiclesDetails, fiber.Map{
+	// 			"id":       vehicle.ID,
+	// 			"type":     vehicle.Vehicle_type,
+	// 			"capacity": vehicle.Capacity,
+	// 		})
+	// 	}
+	// }
 
 	return c.Status(200).JSON(fiber.Map{
-		"Message": "Generated evacuation plan successfully",
-		// "Created plans":    formatPlans,
-		"Created plans":    formatPlans,
-		"Vehicles Details": vehiclesDetails,
+		"Message":       "Generated evacuation plan successfully",
+		"Created plans": formatPlans,
 		"Don't has available vehicle for zone remaining": fiber.Map{
 			"Used vehicles":   usedVehicles,
 			"remaining zones": zoneRemaining,
@@ -345,6 +344,7 @@ func UpdatePlans(c *fiber.Ctx) error {
 	fmt.Printf("found plans : %v\n", plans)
 
 	var updateRequests []map[string]interface{}
+	// var updateRequests []map[string]int
 	errBody := c.BodyParser(&updateRequests)
 	if errBody != nil {
 		return c.Status(400).JSON(fiber.Map{
@@ -367,7 +367,7 @@ func UpdatePlans(c *fiber.Ctx) error {
 			})
 		}
 
-		if peopleEvacuated < 0 {
+		if peopleEvacuated <= 0 {
 			return c.Status(400).JSON(fiber.Map{
 				"message":       fmt.Sprintf("People evacuated cannot be negative in update %d", int(peopleEvacuated)),
 				"invalid value": peopleEvacuated,
@@ -411,5 +411,57 @@ func UpdatePlans(c *fiber.Ctx) error {
 	return c.Status(200).JSON(fiber.Map{
 		"message": "update plans success",
 		"plans":   formattedPlans,
+	})
+}
+
+// --------------------------------------------
+func UpdateMultiPlans(c *fiber.Ctx) error {
+	idParams, err := c.ParamsInt("id")
+	if err != nil {
+		return c.Status(404).JSON(fiber.Map{
+			"message": "Invalid plan ID",
+			"error":   err.Error(),
+		})
+	}
+	getPlan, err := services.GetEvacuationPlan(uint(idParams))
+	if err != nil {
+		return c.Status(404).JSON(fiber.Map{
+			"message": "Error plan not found",
+			"error":   err.Error(),
+		})
+	}
+	// plans, err := services.GetAllEvacuationPlans()
+	// if err != nil {
+	// 	return c.Status(404).JSON(fiber.Map{
+	// 		"message": "Error not found evacuation plans",
+	// 		"error":   err.Error(),
+	// 	})
+	// }
+	// fmt.Printf("found plans : %v\n", plans)
+
+	// var updateRequests []map[string]interface{}
+	// errBody := c.BodyParser(&updateRequests)
+	// if errBody != nil {
+	// 	return c.Status(400).JSON(fiber.Map{
+	// 		"message": "Invalid request body",
+	// 		"error":   errBody.Error(),
+	// 	})
+	// }
+
+	// if len(updateRequests) == 0 {
+	// 	return c.Status(400).JSON(fiber.Map{
+	// 		"message": "No updates provided",
+	// 	})
+	// }
+
+	// for i, update := range updateRequests {
+	// 	if update["id"].(uint) == plans["id"].(float64){
+
+	// 	}
+	// }
+
+	return c.Status(200).JSON(fiber.Map{
+		"message": getPlan,
+		// "request": updateRequests,
 	})
 }

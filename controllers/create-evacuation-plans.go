@@ -10,11 +10,11 @@ import (
 	"github.com/tigerbig1242/evacuation-planning/utils"
 )
 
-type VehicleCapacity struct {
-	ID       uint
-	Capacity int
-	Type     string
-}
+// type VehicleCapacity struct {
+// 	ID       uint
+// 	Capacity int
+// 	Type     string
+// }
 
 func CreateEvacuationPlan(c *fiber.Ctx) error {
 
@@ -67,9 +67,9 @@ func CreateEvacuationPlan(c *fiber.Ctx) error {
 	// Loop for find vehicle capacity fit amount evacuees
 	// and find vehicle capacity that has nearby amount evacuees
 	for i, vehicle := range getVehicles {
-		if vehicle.Capacity <= 0 {
-			continue
-		}
+		// if vehicle.Capacity <= 0 {
+		// 	continue
+		// }
 
 		if vehicle.Capacity == selectedZone.Number_of_people {
 			selectedVehicle = &getVehicles[i]
@@ -112,7 +112,7 @@ func CreateEvacuationPlan(c *fiber.Ctx) error {
 				"zone ID":          selectedZone.ID,
 				"vehicle ID":       selectedVehicle.ID,
 				"zone urgency":     selectedZone.Urgency_level,
-				"people evacuees":  selectedZone.Number_of_people,
+				"people evacuees":  plan.People_evacuated,
 				"vehicle capacity": selectedVehicle.Capacity,
 				"vehicle type":     selectedVehicle.Vehicle_type,
 				"distance":         distance,
@@ -171,34 +171,35 @@ func UpdateSinglePlan(c *fiber.Ctx) error {
 
 	// Parse update people evacuees from request body
 	var updateData models.Evacuation_plan
+	// var updateData map[string]interface{}
 	errBody := c.BodyParser(&updateData)
 	if errBody != nil {
 		return c.Status(400).JSON(fiber.Map{
 			"message": "Invalid request body",
 			"error":   errBody.Error(),
 		})
-
 	}
+	fmt.Printf("update data: %T", updateData)
 
-	if updateData.People_evacuated < 0 {
+	if updateData.People_evacuated <= 0 {
 		return c.Status(400).JSON(fiber.Map{
 			"message": "People evacuated cannot be negative",
 		})
 	}
 
-	vehicleDetails, ok := getPlan["vehicle_details"].(map[string]interface{})
-	if !ok {
-		return c.Status(500).JSON(fiber.Map{
-			"message": "Invalid vehicle details format",
-		})
-	}
+	vehicleDetails := getPlan["vehicle_details"].(map[string]interface{})
+	// if !ok {
+	// 	return c.Status(500).JSON(fiber.Map{
+	// 		"message": "Invalid vehicle details format",
+	// 	})
+	// }
 
-	capacity, ok := vehicleDetails["capacity"].(int)
-	if !ok {
-		return c.Status(500).JSON(fiber.Map{
-			"message": "Invalid capacity format",
-		})
-	}
+	capacity := vehicleDetails["capacity"].(int)
+	// if !ok {
+	// 	return c.Status(500).JSON(fiber.Map{
+	// 		"message": "Invalid capacity format",
+	// 	})
+	// }
 
 	if updateData.People_evacuated > capacity {
 		return c.Status(400).JSON(fiber.Map{

@@ -11,20 +11,9 @@ func CreateEvacuationPlan(evacuationPlan *models.Evacuation_plan) (models.Evacua
 	if result.Error != nil {
 		return models.Evacuation_plan{}, result.Error
 	}
-	plan := config.DB.Preload("Vehicle").First(evacuationPlan, evacuationPlan.ID)
+	plan := config.DB.Preload("Vehicle").Preload("Zone").First(evacuationPlan, evacuationPlan.ID)
 	if plan.Error != nil {
 		return models.Evacuation_plan{}, plan.Error
 	}
 	return *evacuationPlan, nil
 }
-
-// func CreateEvacuationPlans(allocation map[uint][]models.Vehicle) ([]models.Evacuation_plan, error) {
-// 	result := config.DB.Create(&allocation)
-// 	if result.Error != nil {
-// 		return  result.Error
-// 	}
-
-// 	return nil
-// }
-
-// Update evacuation table only field number_of_people
