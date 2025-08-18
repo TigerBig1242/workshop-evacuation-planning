@@ -12,3 +12,7 @@ Test workshop to get work is evacuation planning
    - delete multiple plans
 
 zap library to make log
+
+How to run test 
+   - run docker-compose
+   - go run .
